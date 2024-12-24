@@ -1,9 +1,10 @@
-// src/index.js
-import { readFile } from "fs/promises";
-import { config, validateConfig } from "./config.js";
-import { createFileWatcher, closeAllWatchers } from "./filewatcher.js";
-import { importToApifox, importFromUrl } from "./apifox.js";
-import { logger } from './logger.js';
+#!/usr/bin/env node
+import { program } from 'commander';
+import { config, validateConfig, loadConfig } from "./src/core/config.js";
+import { createFileWatcher, closeAllWatchers } from "./src/core/watcher.js";
+import { importToApifox } from "./src/services/apifox.js";
+import { readFileContent } from "./src/utils/file.js";
+import { logger } from './src/core/logger.js';
 
 // 存储每个文件的最后内容
 const fileContentsCache = new Map();
@@ -15,12 +16,10 @@ async function handleExit(signal) {
     process.exit(0);
 }
 
-// 注册退出信号处理器
-process.on('SIGINT', () => handleExit('SIGINT'));   // Ctrl+C
-process.on('SIGTERM', () => handleExit('SIGTERM')); // kill
-process.on('SIGHUP', () => handleExit('SIGHUP'));   // 终端关闭
+process.on('SIGINT', () => handleExit('SIGINT'));
+process.on('SIGTERM', () => handleExit('SIGTERM'));
+process.on('SIGHUP', () => handleExit('SIGHUP'));
 
-// 处理未捕获的异常
 process.on('uncaughtException', async (error) => {
     logger.error('未捕获的异常', { error: error.message });
     await closeAllWatchers();
@@ -40,7 +39,7 @@ async function handleFileChange(project, filePath) {
     });
 
     try {
-        const fileContent = await readFile(filePath, "utf-8");
+        const fileContent = await readFileContent(filePath);
         if (fileContent === fileContentsCache.get(filePath)) {
             logger.debug('文件内容未变化', { file: filePath });
             return;
@@ -67,20 +66,19 @@ async function handleFileChange(project, filePath) {
     }
 }
 
-async function main() {
+async function main(configPath) {
     try {
+        // 加载指定的配置文件
+        await loadConfig(configPath);
         validateConfig();
 
-        // 为每个项目创建文件监听器
         for (const project of config.projects) {
-            // 初始化文件内容缓存
             for (const docPath of project.docPaths) {
-                const content = await readFile(docPath, "utf-8");
+                const content = await readFileContent(docPath);
                 fileContentsCache.set(docPath, content);
                 logger.init('初始化文件内容缓存', { file: docPath });
             }
 
-            // 创建文件监听器
             createFileWatcher(project.docPaths, (filePath) => {
                 handleFileChange(project, filePath);
             });
@@ -94,4 +92,14 @@ async function main() {
     }
 }
 
-main();
+// 配置命令行参数
+program
+    .name('apifox-autoimport')
+    .description('Auto sync OpenAPI docs to Apifox')
+    .version('1.0.0')
+    .option('-c, --config <path>', 'config file path', 'config.yaml')
+    .action((options) => {
+        main(options.config);
+    });
+
+program.parse(); 

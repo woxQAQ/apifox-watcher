@@ -6,14 +6,25 @@
 - customizable endpoint, support self hosted apifox server
 - support multiple projects and documents
 - support sync from url
+- support custom config file path
 
 ## usage
 
 ```bash
-cp config.example.yaml config.yaml
+# Install globally
+npm install -g apifox-autoimport
+
+# Run with default config file (config.yaml)
+apifox-autoimport
+
+# Run with custom config file
+apifox-autoimport -c /path/to/your/config.yaml
+
+# Show help
+apifox-autoimport --help
 ```
 
-Then edit config.yaml with your own values:
+Create your config file:
 
 ```yaml
 projects:

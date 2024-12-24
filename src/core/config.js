@@ -3,41 +3,48 @@ import { join } from 'path';
 import yaml from 'js-yaml';
 import { logger } from './logger.js';
 
-// 读取配置文件
-function loadConfig() {
+let config = null;
+
+export function loadConfig(configPath) {
     try {
-        const configPath = join(process.cwd(), 'config.yaml');
-        const configFile = readFileSync(configPath, 'utf-8');
-        const config = yaml.load(configFile);
+        const resolvedPath = configPath.startsWith('/')
+            ? configPath
+            : join(process.cwd(), configPath);
+
+        logger.debug('加载配置文件', { path: resolvedPath });
+        
+        const configFile = readFileSync(resolvedPath, 'utf-8');
+        config = yaml.load(configFile);
 
         // 处理默认值
         config.projects = config.projects.map(project => ({
             ...project,
-            apiKey: project.apiKey || config.defaultApiKey,  // 使用项目配置的 apiKey，如果没有则使用默认值
-            apiUrl: project.apiUrl || config.defaultApiUrl,  // 使用项目配置的 apiUrl，如果没有则使用默认值
+            apiKey: project.apiKey || config.defaultApiKey,
+            apiUrl: project.apiUrl || config.defaultApiUrl,
         }));
 
         return config;
     } catch (error) {
-        logger.error('无法读取配置文件', { error: error.message });
+        logger.error('无法读取配置文件', { path: configPath, error: error.message });
         throw error;
     }
 }
 
-export const config = loadConfig();
-
 export function validateConfig() {
+    if (!config) {
+        throw new Error('配置未加载，请先调用 loadConfig');
+    }
+
     if (!config.projects || !Array.isArray(config.projects) || config.projects.length === 0) {
         throw new Error('至少需要配置一个项目');
     }
 
-    // 验证全局配���
     if (!config.defaultApiKey) {
         logger.warn('未配置默认 API Key');
     }
 
     config.projects.forEach((project) => {
-        const requiredFields = ['projectId', 'docPaths'];  // apiKey 和 apiUrl 现在可以从默认值继承
+        const requiredFields = ['projectId', 'docPaths'];
         const missingFields = requiredFields.filter(field => !project[field]);
         
         if (missingFields.length > 0) {
@@ -48,13 +55,11 @@ export function validateConfig() {
             throw new Error(`项目 ${project.name} 未配置文档路径`);
         }
 
-        // 确保项目有 apiKey（自己的或默认的）
         if (!project.apiKey && !config.defaultApiKey) {
             throw new Error(`项目 ${project.name} 未配置 API Key，且未配置默认 API Key`);
         }
     });
 
-    // 使用初始化日志级别
     logger.init('配置验证通过', { 
         projects: config.projects.map(p => ({
             name: p.name,
@@ -63,7 +68,10 @@ export function validateConfig() {
     });
 }
 
+export { config };
+
 export default {
     config,
+    loadConfig,
     validateConfig,
-};
+}; 
