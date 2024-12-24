@@ -1,15 +1,13 @@
 // src/apifoxApi.js
 import axios from "axios";
-const UrlPatternOptions = {
-    segmentValueCharset: "a-zA-Z0-9-_~.",
-};
+import { logger } from './logger.js';
+
 export async function importToApifox(apiUrl, apiKey, fileContent) {
-    console.log(apiUrl);
     try {
-        let raw = JSON.stringify({
-            input: fileContent,
-        });
-        let config = {
+        logger.debug('准备导入数据到 Apifox', { url: apiUrl });
+        
+        const raw = JSON.stringify({ input: fileContent });
+        const config = {
             method: "post",
             url: apiUrl,
             headers: {
@@ -21,17 +19,38 @@ export async function importToApifox(apiUrl, apiKey, fileContent) {
             data: raw,
         };
 
-        axios(config)
-            .then((resp) => {})
-            .catch((error) => {
-                console.log(error);
-            });
-        console.log("导入成功");
+        const response = await axios(config);
+        logger.info('导入成功', { 
+            url: apiUrl,
+            status: response.status
+        });
+        return response.data;
     } catch (error) {
-        console.error(`导入失败，错误信息: ${error.message}`);
+        logger.error('导入失败', {
+            url: apiUrl,
+            error: error.message,
+            response: error.response?.data
+        });
+        throw error;
+    }
+}
+
+// 新增：从 URL 导入 API 文档
+export async function importFromUrl(apiUrl, apiKey, sourceUrl) {
+    try {
+        logger.debug('从 URL 获取数据', { url: sourceUrl });
+        const response = await axios.get(sourceUrl);
+        return await importToApifox(apiUrl, apiKey, response.data);
+    } catch (error) {
+        logger.error('从 URL 导入失败', {
+            sourceUrl,
+            error: error.message
+        });
+        throw error;
     }
 }
 
 export default {
     importToApifox,
+    importFromUrl,
 };

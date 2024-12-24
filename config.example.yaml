@@ -1,0 +1,21 @@
+# 项目配置列表
+projects:
+  - name: 示例项目1
+    projectId: your_project_id_1
+    apiKey: your_api_key_1
+    docPaths:
+      - /path/to/doc1.yaml
+      - /path/to/doc2.yaml
+    apiUrl: https://api.apifox.com/api/v1/projects/:projectId/import-data
+
+# 全局配置
+defaultApiUrl: https://api.apifox.com/api/v1/projects/:projectId/import-data
+defaultApiKey:  # 默认的 API Key
+
+# 日志配置
+logging:
+  level: info  # error | warn | info | debug
+  file:
+    path: ./logs
+    maxSize: 10m
+    maxFiles: 5 

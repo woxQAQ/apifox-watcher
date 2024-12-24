@@ -1,18 +1,23 @@
 // src/fileWatcher.js
 import { watch } from "chokidar";
-export function createFileWatcher(filePath, onChange) {
-    const watcher = watch(filePath, {
+import { logger } from './logger.js';
+
+export function createFileWatcher(docPaths, onChange) {
+    const watcher = watch(docPaths, {
         persistent: true,
         ignoreInitial: true,
         awaitWriteFinish: {
-            stabilityThreshold: 2000, // 等待 2000ms 确保文件写入完成
-            pollInterval: 100, // 检查文件状态的间隔时间
+            stabilityThreshold: 2000,
+            pollInterval: 100,
         },
     });
 
     watcher.on("change", onChange);
+    watcher.on("error", error => {
+        logger.error('文件监听出错', { error: error.message });
+    });
 
-    console.log(`正在监听文件: ${filePath}`);
+    logger.init('开始监听文件', { paths: docPaths });
 
     return watcher;
 }
