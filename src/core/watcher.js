@@ -1,8 +1,6 @@
-// src/fileWatcher.js
 import { watch } from "chokidar";
 import { logger } from './logger.js';
 
-// 存储所有的 watchers，方便统一关闭
 const watchers = new Set();
 
 export function createFileWatcher(docPaths, onChange) {
@@ -22,7 +20,6 @@ export function createFileWatcher(docPaths, onChange) {
 
     logger.init('开始监听文件', { paths: docPaths });
     
-    // 将 watcher 添加到集合中
     watchers.add(watcher);
     return watcher;
 }
@@ -43,4 +40,4 @@ export async function closeAllWatchers() {
 export default {
     createFileWatcher,
     closeAllWatchers,
-};
+}; 

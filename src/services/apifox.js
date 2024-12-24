@@ -1,6 +1,5 @@
-// src/apifoxApi.js
 import axios from "axios";
-import { logger } from './logger.js';
+import { logger } from '../core/logger.js';
 
 export async function importToApifox(apiUrl, apiKey, fileContent) {
     try {
@@ -35,7 +34,6 @@ export async function importToApifox(apiUrl, apiKey, fileContent) {
     }
 }
 
-// 新增：从 URL 导入 API 文档
 export async function importFromUrl(apiUrl, apiKey, sourceUrl) {
     try {
         logger.debug('从 URL 获取数据', { url: sourceUrl });
@@ -53,4 +51,4 @@ export async function importFromUrl(apiUrl, apiKey, sourceUrl) {
 export default {
     importToApifox,
     importFromUrl,
-};
+}; 
