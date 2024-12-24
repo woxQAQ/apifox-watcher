@@ -10,20 +10,6 @@
 
 ## usage
 
-```bash
-# Install globally
-npm install -g apifox-autoimport
-
-# Run with default config file (config.yaml)
-apifox-autoimport
-
-# Run with custom config file
-apifox-autoimport -c /path/to/your/config.yaml
-
-# Show help
-apifox-autoimport --help
-```
-
 Create your config file:
 
 ```yaml
@@ -35,4 +21,16 @@ projects:
       - /path/to/your/api/doc1.yaml
       - /path/to/your/api/doc2.yaml
     apiUrl: https://api.apifox.com/api/v1/projects/:projectId/import-data
+```
+
+and then run:
+
+```bash
+node index.js -f /path/to/your/config.yaml
+```
+
+or
+
+```bash
+pnpm start -- -f /path/to/your/config.yaml
 ```
